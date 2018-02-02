@@ -2,7 +2,7 @@
 use Codeception\Util\Fixtures;
 use Faker\Factory as Faker;
 use Eccube\Kernel;
-
+use Symfony\Component\Dotenv\Dotenv;
 
 $config = parse_ini_file('tests/acceptance/config.ini',true);
 
@@ -13,6 +13,17 @@ $config = parse_ini_file('tests/acceptance/config.ini',true);
  * データの件数によって、作成するかどうか判定される
  */
 require_once $config['eccube_path'].'/vendor/autoload.php';
+
+
+// The check is to ensure we don't use .env in production
+if (!isset($_SERVER['APP_ENV'])) {
+    if (file_exists($config['eccube_path'].'/.env')) {
+        (new Dotenv())->load($config['eccube_path'].'/.env');
+    } else {
+        (new Dotenv())->load($config['eccube_path'].'/.env.install');
+    }
+}
+
 $kernel = new Kernel('test', false);
 $kernel->boot();
 
