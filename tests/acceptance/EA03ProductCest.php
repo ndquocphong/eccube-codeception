@@ -67,6 +67,7 @@ class EA03ProductCest
         $I->see("検索結果 ".count($Products)." 件 が該当しました", ProductManagePage::$検索結果_メッセージ);
 
         $ProductCSV = $I->getLastDownloadFile('/^product_\d{14}\.csv$/');
+        sleep(10); // make csv file download completed
         $I->assertGreaterOrEquals(count($Products), count(file($ProductCSV)), '検索結果以上の行数があるはず');
     }
 
