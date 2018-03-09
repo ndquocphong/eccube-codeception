@@ -14,6 +14,7 @@ use Page\Admin\TopPage;
 class EA01TopCest
 {
     const ページタイトル = '#main .page-header';
+    const ページタイトルStyleGuide = '.c-pageTitle h2.c-pageTitle__title';
 
     public function _before(\AcceptanceTester $I)
     {
@@ -45,7 +46,7 @@ class EA01TopCest
         $config = Fixtures::get('config');
         $findOrders = Fixtures::get('findOrders');
         $NewOrders = array_filter($findOrders(), function ($Order) use ($config) {
-            return $Order->getOrderStatus()->getId() == $config['order_new'];
+            return $Order->getOrderStatus()->getId() == \Eccube\Entity\Master\OrderStatus::NEW;
         });
         $I->see(count($NewOrders), TopPage::$受付状況_新規受付数);
 
@@ -78,11 +79,11 @@ class EA01TopCest
 
         // ショップ情報の在庫切れ商品をクリックすると商品管理ページに遷移することを確認
         $I->click(TopPage::$ショップ状況_在庫切れ商品);
-        $I->see('商品マスター', self::ページタイトル);
+        $I->see('商品マスター', self::ページタイトルStyleGuide);
         $I->goToAdminPage();
 
         // ショップ情報の会員数をクリックすると会員管理に遷移することを確認
         $I->click(TopPage::$ショップ状況_会員数);
-        $I->see('会員マスター', self::ページタイトル);
+        $I->see('会員マスター', self::ページタイトルStyleGuide);
     }
 }

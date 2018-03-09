@@ -136,7 +136,7 @@ class EF03OrderCest
             $I->seeInLastEmailSubjectTo($email, 'ご注文ありがとうございます');
             $I->seeInLastEmailTo($email, $customer->getName01().' '.$customer->getName02().' 様');
             $I->seeInLastEmailTo($email, 'お名前　：'.$customer->getName01().' '.$customer->getName02().' 様');
-            $I->seeInLastEmailTo($email, 'フリガナ：'.$customer->getKana01().' '.$customer->getKana02().' 様');
+            $I->seeInLastEmailTo($email, 'お名前(フリガナ)：'.$customer->getKana01().' '.$customer->getKana02().' 様');
             $I->seeInLastEmailTo($email, '郵便番号：〒'.$customer->getZip01().'-'.$customer->getZip02());
             $I->seeInLastEmailTo($email, '住所　　：'.$customer->getPref()->getName().$customer->getAddr01().$customer->getAddr02());
             $I->seeInLastEmailTo($email, '電話番号：'.$customer->getTel01().'-'.$customer->getTel02().'-'.$customer->getTel03());
@@ -165,13 +165,21 @@ class EF03OrderCest
         CartPage::go($I)
             ->レジに進む();
 
-        ShoppingLoginPage::at($I)->ゲスト購入()
+        $ShoppingPage = ShoppingLoginPage::at($I)->ゲスト購入();
+        $ShoppingPage
             ->入力_姓('姓03')
             ->入力_名('名03')
             ->入力_セイ('セイ')
             ->入力_メイ('メイ')
             ->入力_郵便番号1('530')
-            ->入力_郵便番号2('0001')
+            ->入力_郵便番号2('0001');
+
+        // TODO: 郵便番号入力後のcodeceptionの入力後にJSが走ってしまい「梅田」が2重で入力されてしまう。
+        // 上記を回避するためにwait関数を入れる。
+        // こちらは本体のmasterブランチで修正されているので、master -> sf マージ後には不要になる見込み。
+        $I->wait(5);
+
+        $ShoppingPage
             ->入力_都道府県(['value' => '27'])
             ->入力_市区町村名('大阪市北区')
             ->入力_番地_ビル名('梅田2-4-9 ブリーゼタワー13F')
@@ -196,7 +204,7 @@ class EF03OrderCest
             $I->seeInLastEmailSubjectTo($email, 'ご注文ありがとうございます');
             $I->seeInLastEmailTo($email, '姓03 名03 様');
             $I->seeInLastEmailTo($email, 'お名前　：姓03 名03 様');
-            $I->seeInLastEmailTo($email, 'フリガナ：セイ メイ 様');
+            $I->seeInLastEmailTo($email, 'お名前(フリガナ)：セイ メイ 様');
             $I->seeInLastEmailTo($email, '郵便番号：〒530-0001');
             $I->seeInLastEmailTo($email, '住所　　：大阪府大阪市北区梅田2-4-9 ブリーゼタワー13F');
             $I->seeInLastEmailTo($email, '電話番号：111-111-111');
@@ -226,13 +234,21 @@ class EF03OrderCest
         CartPage::go($I)
             ->レジに進む();
 
-        ShoppingLoginPage::at($I)->ゲスト購入()
+        $ShoppingPage = ShoppingLoginPage::at($I)->ゲスト購入();
+        $ShoppingPage
             ->入力_姓('姓03')
             ->入力_名('名03')
             ->入力_セイ('セイ')
             ->入力_メイ('メイ')
             ->入力_郵便番号1('530')
-            ->入力_郵便番号2('0001')
+            ->入力_郵便番号2('0001');
+
+        // TODO: 郵便番号入力後のcodeceptionの入力後にJSが走ってしまい「梅田」が2重で入力されてしまう。
+        // 上記を回避するためにwait関数を入れる。
+        // こちらは本体のmasterブランチで修正されているので、master -> sf マージ後には不要になる見込み。
+        $I->wait(5);
+
+        $ShoppingPage
             ->入力_都道府県(['value' => '27'])
             ->入力_市区町村名('大阪市北区')
             ->入力_番地_ビル名('梅田2-4-9 ブリーゼタワー13F')

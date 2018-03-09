@@ -4,6 +4,7 @@ use Codeception\Util\Fixtures;
 use Page\Admin\CsvSettingsPage;
 use Page\Admin\OrderManagePage;
 use Page\Admin\OrderEditPage;
+use Eccube\Entity\Master\OrderStatus;
 
 /**
  * @group admin
@@ -28,16 +29,15 @@ class EA04OrderCest
     {
         $I->wantTo('EA0401-UC01-T01(& UC01-T02) 受注検索');
 
-        $config = Fixtures::get('config');
         $findOrders = Fixtures::get('findOrders'); // Closure
-        $TargetOrders = array_filter($findOrders(), function ($Order) use ($config) {
-            return $Order->getOrderStatus()->getId() != $config['order_processing'];
+        $TargetOrders = array_filter($findOrders(), function ($Order) {
+            return $Order->getOrderStatus()->getId() != OrderStatus::PROCESSING;
         });
         OrderManagePage::go($I)->検索();
-        $I->see('検索結果 '.count($TargetOrders).' 件 が該当しました', OrderManagePage::$検索結果_メッセージ);
+        $I->see('検索結果：'.count($TargetOrders).'件が該当しました', OrderManagePage::$検索結果_メッセージ);
 
         OrderManagePage::go($I)->検索('gege@gege.com');
-        $I->see('検索条件に該当するデータがありませんでした。', OrderManagePage::$検索結果_メッセージ);
+        $I->see('検索結果：0件が該当しました', OrderManagePage::$検索結果_メッセージ);
     }
 
     /**
@@ -48,15 +48,16 @@ class EA04OrderCest
     {
         $I->wantTo('EA0401-UC02-T01 受注CSVダウンロード');
 
-        $config = Fixtures::get('config');
         $findOrders = Fixtures::get('findOrders'); // Closure
-        $TargetOrders = array_filter($findOrders(), function ($Order) use ($config) {
-            return $Order->getOrderStatus()->getId() != $config['order_processing'];
+        $TargetOrders = array_filter($findOrders(), function ($Order) {
+            return $Order->getOrderStatus()->getId() != OrderStatus::PROCESSING;
         });
         $OrderListPage = OrderManagePage::go($I)->検索();
-        $I->see('検索結果 '.count($TargetOrders).' 件 が該当しました', OrderManagePage::$検索結果_メッセージ);
+        $I->see('検索結果：'.count($TargetOrders).'件が該当しました', OrderManagePage::$検索結果_メッセージ);
 
         $OrderListPage->受注CSVダウンロード実行();
+        // make sure wait to download file completely
+        sleep(10);
         $OrderCSV = $I->getLastDownloadFile('/^order_\d{14}\.csv$/');
         $I->assertGreaterOrEquals(count($TargetOrders), count(file($OrderCSV)), '検索結果以上の行数があるはず');
     }
@@ -65,13 +66,12 @@ class EA04OrderCest
     {
         $I->wantTo('EA0401-UC02-T02 受注情報のCSV出力項目変更設定');
 
-        $config = Fixtures::get('config');
         $findOrders = Fixtures::get('findOrders'); // Closure
-        $TargetOrders = array_filter($findOrders(), function ($Order) use ($config) {
-            return $Order->getOrderStatus()->getId() != $config['order_processing'];
+        $TargetOrders = array_filter($findOrders(), function ($Order) {
+            return $Order->getOrderStatus()->getId() != OrderStatus::PROCESSING;
         });
         $OrderListPage = OrderManagePage::go($I)->検索();
-        $I->see('検索結果 '.count($TargetOrders).' 件 が該当しました', OrderManagePage::$検索結果_メッセージ);
+        $I->see('検索結果：'.count($TargetOrders).'件が該当しました', OrderManagePage::$検索結果_メッセージ);
 
         /* 項目設定 */
         $OrderListPage->受注CSV出力項目設定();
@@ -84,15 +84,17 @@ class EA04OrderCest
     /**
      * @env firefox
      * @env chrome
+     *
+     * TODO: This test should move to shipping cest
+     * @skip
      */
     public function order_配送CSVダウンロード(\AcceptanceTester $I)
     {
         $I->wantTo('EA0401-UC03-T01 配送CSVダウンロード');
 
-        $config = Fixtures::get('config');
         $findOrders = Fixtures::get('findOrders'); // Closure
-        $TargetOrders = array_filter($findOrders(), function ($Order) use ($config) {
-            return $Order->getOrderStatus()->getId() != $config['order_processing'];
+        $TargetOrders = array_filter($findOrders(), function ($Order) {
+            return $Order->getOrderStatus()->getId() != OrderStatus::PROCESSING;
         });
         $OrderListPage = OrderManagePage::go($I)->検索();
         $I->see('検索結果 '.count($TargetOrders).' 件 が該当しました', OrderManagePage::$検索結果_メッセージ);
@@ -102,14 +104,17 @@ class EA04OrderCest
         $I->assertGreaterOrEquals(count($TargetOrders), count(file($ShippingCSV)), '検索結果以上の行数があるはず');
     }
 
+    /**
+     *  TODO: This test should move to shipping cest
+     * @skip
+     */
     public function order_配送情報のCSV出力項目変更設定(\AcceptanceTester $I)
     {
         $I->wantTo('EA0401-UC03-T02 配送情報のCSV出力項目変更設定');
 
-        $config = Fixtures::get('config');
         $findOrders = Fixtures::get('findOrders'); // Closure
-        $TargetOrders = array_filter($findOrders(), function ($Order) use ($config) {
-            return $Order->getOrderStatus()->getId() != $config['order_processing'];
+        $TargetOrders = array_filter($findOrders(), function ($Order) {
+            return $Order->getOrderStatus()->getId() != OrderStatus::PROCESSING;
         });
         $OrderListPage = OrderManagePage::go($I)->検索();
         $I->see('検索結果 '.count($TargetOrders).' 件 が該当しました', OrderManagePage::$検索結果_メッセージ);
@@ -122,19 +127,21 @@ class EA04OrderCest
         $I->assertEquals(4, $value);
     }
 
+    /**
+     * TODO: will fix when apply style guide for admin order edit
+     *
+     * @skip
+     */
     public function order_受注編集(\AcceptanceTester $I)
     {
-        $I->getScenario()->skip('新出荷管理が実装されるまでスキップ');
-
         $I->wantTo('EA0401-UC05-T01(& UC05-T02/UC06-T01) 受注編集');
 
-        $config = Fixtures::get('config');
         $findOrders = Fixtures::get('findOrders'); // Closure
-        $TargetOrders = array_filter($findOrders(), function ($Order) use ($config) {
-            return $Order->getOrderStatus()->getId() != $config['order_processing'];
+        $TargetOrders = array_filter($findOrders(), function ($Order) {
+            return $Order->getOrderStatus()->getId() != OrderStatus::PROCESSING;
         });
         $OrderListPage = OrderManagePage::go($I)->検索();
-        $I->see('検索結果 '.count($TargetOrders).' 件 が該当しました', OrderManagePage::$検索結果_メッセージ);
+        $I->see('検索結果：'.count($TargetOrders).'件が該当しました', OrderManagePage::$検索結果_メッセージ);
 
         /* 編集 */
         $OrderListPage->一覧_編集(1);
@@ -151,16 +158,16 @@ class EA04OrderCest
             ->入力_姓('aaa')
             ->入力_セイ('アアア')
             ->入力_メイ('アアア')
-            ->入力_郵便番号1('111')
-            ->入力_郵便番号2('1111')
+            ->入力_郵便番号1('060')
+            ->入力_郵便番号2('0000')
+            ->入力_都道府県(['1' => '北海道'])
             ->入力_市区町村名('bbb')
             ->入力_番地_ビル名('bbb')
             ->入力_電話番号1('111')
             ->入力_電話番号2('111')
             ->入力_電話番号3('111')
+            ->入力_番地_ビル名('address 2')
             ->入力_支払方法(['4' => '郵便振替'])
-            ->注文者情報をコピー()
-            ->入力_配送業者(['1' => 'サンプル業者'])
             ->受注情報登録();
 
         $I->see('受注情報を保存しました。', OrderEditPage::$登録完了メッセージ);
@@ -175,23 +182,22 @@ class EA04OrderCest
 
     public function order_受注削除(\AcceptanceTester $I)
     {
-        $I->getScenario()->skip('新出荷管理が実装されるまでスキップ');
-
         $I->wantTo('EA0401-UC08-T01(& UC08-T02) 受注削除');
 
-        $config = Fixtures::get('config');
         $findOrders = Fixtures::get('findOrders'); // Closure
-        $TargetOrders = array_filter($findOrders(), function ($Order) use ($config) {
-            return $Order->getOrderStatus()->getId() != $config['order_processing'];
+        $TargetOrders = array_filter($findOrders(), function ($Order) {
+            return $Order->getOrderStatus()->getId() != OrderStatus::PROCESSING;
         });
 
         $OrderListPage = OrderManagePage::go($I)->検索();
-        $I->see('検索結果 '.count($TargetOrders).' 件 が該当しました', OrderManagePage::$検索結果_メッセージ);
+        $I->see('検索結果：'.count($TargetOrders).'件が該当しました', OrderManagePage::$検索結果_メッセージ);
 
         // 削除
         $OrderNumForDel = $OrderListPage->一覧_注文番号(1);
         $OrderListPage->一覧_削除(1);
         $I->acceptPopup();
+
+        $I->getScenario()->incomplete('未実装：受注マスターでの受注削除が未実装');
 
         $I->see('受注情報を削除しました', ['css' => '#main > div > div:nth-child(1) > div']);
         $I->assertNotEquals($OrderNumForDel, $OrderListPage->一覧_注文番号(1));
@@ -209,21 +215,23 @@ class EA04OrderCest
         $I->wantTo('EA0402-UC01-T01 受注メール通知');
 
         $I->resetEmails();
-        $config = Fixtures::get('config');
         $findOrders = Fixtures::get('findOrders');
-        $NewOrders = array_filter($findOrders(), function ($Order) use ($config) {
-            return $Order->getOrderStatus()->getId() == $config['order_new'];
+        $NewOrders = array_filter($findOrders(), function ($Order) {
+            return $Order->getOrderStatus()->getId() == OrderStatus::NEW;
         });
         $Order = array_pop($NewOrders);
         $OrderListPage = OrderManagePage::go($I)->検索($Order->getId());
-        $I->see('検索結果 1 件 が該当しました', OrderManagePage::$検索結果_メッセージ);
+        $I->see('検索結果：1件が該当しました', OrderManagePage::$検索結果_メッセージ);
 
         $OrderListPage->一覧_メール通知(1);
 
         $I->selectOption(['id' => 'template-change'], ['1' => '注文受付メール']);
-        $I->click(['css' => '#button_box__button_menu > button']);
-        $I->click(['css' => '#confirm_box__button_menu > p:nth-child(2) > button']);
+        $I->click(['id' => 'mailConfirm']);
+        $I->scrollTo(['id' => 'sendMail'], 0, 100);
+        $I->wait(1);
+        $I->click(['id' => 'sendMail']);
 
+        $I->wait(3);
         $I->seeEmailCount(2);
 
         $I->seeInLastEmailSubjectTo('admin@example.com', 'ご注文ありがとうございます');
@@ -238,35 +246,35 @@ class EA04OrderCest
         $config = Fixtures::get('config');
         $findOrders = Fixtures::get('findOrders'); // Closure
         $TargetOrders = array_filter($findOrders(), function ($Order) use ($config) {
-            return $Order->getOrderStatus()->getId() != $config['order_processing'];
+            return $Order->getOrderStatus()->getId() != OrderStatus::PROCESSING;
         });
         $OrderListPage = OrderManagePage::go($I)->検索();
-        $I->see('検索結果 '.count($TargetOrders).' 件 が該当しました', OrderManagePage::$検索結果_メッセージ);
+        $I->see('検索結果：'.count($TargetOrders).'件が該当しました', OrderManagePage::$検索結果_メッセージ);
 
         $OrderListPage
             ->一覧_全選択()
             ->メール一括通知();
 
         $I->selectOption(['id' => 'template-change'], ['1' => '注文受付メール']);
-        $I->click(['css' => '#top_box__button_menu > button']);
-        $I->click(['css' => '#confirm_box__button_menu > p:nth-child(2) > button']);
+        $I->click(['id' => 'mailConfirm']);
+        $I->scrollTo(['id' => 'sendMail'], 0, 100);
+        $I->wait(1);
+        $I->click(['id' => 'sendMail']);
 
+        $I->wait(5);
         $I->seeEmailCount(20);
     }
 
     public function order_受注登録(\AcceptanceTester $I)
     {
-
-        $I->getScenario()->skip('新出荷管理が実装されるまでスキップ');
-
         $I->wantTo('EA0405-UC01-T01(& UC01-T02) 受注登録');
 
-        $OrderRegisterPage = OrderEditPage::go($I)
-            ->受注情報登録();
+        $OrderRegisterPage = OrderEditPage::go($I)->受注情報登録();
 
         /* 異常系 */
         $I->dontSee('受注情報を保存しました。', OrderEditPage::$登録完了メッセージ);
 
+        $I->getScenario()->incomplete('未実装：受注への商品の追加が未実装');
 
         /* 正常系 */
         $OrderRegisterPage
@@ -275,8 +283,8 @@ class EA04OrderCest
             ->入力_名('order1')
             ->入力_セイ('アアア')
             ->入力_メイ('アアア')
-            ->入力_郵便番号1('111')
-            ->入力_郵便番号2('1111')
+            ->入力_郵便番号1('060')
+            ->入力_郵便番号2('0000')
             ->入力_都道府県(['1' => '北海道'])
             ->入力_市区町村名('bbb')
             ->入力_番地_ビル名('bbb')
@@ -287,8 +295,6 @@ class EA04OrderCest
             ->商品検索('パーコレーター')
             ->商品検索結果_選択(1)
             ->入力_支払方法(['4'=> '郵便振替'])
-            ->注文者情報をコピー()
-            ->入力_配送業者(['1' => 'サンプル業者'])
             ->受注情報登録();
 
         $I->see('受注情報を保存しました。', OrderEditPage::$登録完了メッセージ);

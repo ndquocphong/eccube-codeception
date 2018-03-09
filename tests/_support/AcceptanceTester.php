@@ -2,6 +2,7 @@
 use Codeception\Util\Fixtures;
 use Eccube\Common\Constant;
 use Interactions\DragAndDropBy;
+use Symfony\Component\Filesystem\Exception\FileNotFoundException;
 
 /**
  * Inherited Methods
@@ -50,10 +51,10 @@ class AcceptanceTester extends \Codeception\Actor
     {
         $I = $this;
         $isLogin = $I->grabTextFrom('#header .navbar-menu .dropdown .dropdown-toggle');
-        if ($isLogin == '管理者 様') {
+        if ($isLogin == '管理者') {
             $I->click('#header .navbar-menu .dropdown .dropdown-toggle');
             $config = Fixtures::get('config');
-            $I->amOnPage('/'.$config['admin_route'].'/logout');
+            $I->amOnPage('/'.$config['eccube_admin_route'].'/logout');
             $I->see('ログイン', '.login-box #form1 .btn_area button');
         }
     }
@@ -63,7 +64,7 @@ class AcceptanceTester extends \Codeception\Actor
         $I = $this;
         if ($dir == '') {
             $config = Fixtures::get('config');
-            $I->amOnPage('/'.$config['admin_route']);
+            $I->amOnPage('/'.$config['eccube_admin_route']);
         } else {
             $I->amOnPage('/'.$dir);
         }
@@ -98,19 +99,19 @@ class AcceptanceTester extends \Codeception\Actor
         if(!$pid) {
             return;
         }
-        $app = Fixtures::get('app');
+        $entityManager = Fixtures::get('entityManager');
 
         if (!is_array($stock)) {
-            $pc = $app['orm.em']->getRepository('Eccube\Entity\ProductClass')->findOneBy(array('Product' => $pid));
+            $pc = $entityManager->getRepository('Eccube\Entity\ProductClass')->findOneBy(array('Product' => $pid));
             $pc->setStock($stock);
             $pc->setStockUnlimited(Constant::DISABLED);
-            $ps = $app['orm.em']->getRepository('Eccube\Entity\ProductStock')->findOneBy(array('ProductClass' => $pc->getId()));
+            $ps = $entityManager->getRepository('Eccube\Entity\ProductStock')->findOneBy(array('ProductClass' => $pc->getId()));
             $ps->setStock($stock);
-            $app['orm.em']->persist($pc);
-            $app['orm.em']->persist($ps);
-            $app['orm.em']->flush();
+            $entityManager->persist($pc);
+            $entityManager->persist($ps);
+            $entityManager->flush();
         } else {
-            $pcs = $app['orm.em']->getRepository('Eccube\Entity\ProductClass')
+            $pcs = $entityManager->getRepository('Eccube\Entity\ProductClass')
                 ->createQueryBuilder('o')
                 ->where('o.Product = '.$pid)
                 ->andwhere('o.ClassCategory1 > 0')
@@ -120,11 +121,11 @@ class AcceptanceTester extends \Codeception\Actor
                 $pc->setStock($stock[$key]);
                 $pc->setStockUnlimited(Constant::DISABLED);
                 $pc->setSaleLimit(2);
-                $ps = $app['orm.em']->getRepository('Eccube\Entity\ProductStock')->findOneBy(array('ProductClass' => $pc->getId()));
+                $ps = $entityManager->getRepository('Eccube\Entity\ProductStock')->findOneBy(array('ProductClass' => $pc->getId()));
                 $ps->setStock($stock[$key]);
-                $app['orm.em']->persist($pc);
-                $app['orm.em']->persist($ps);
-                $app['orm.em']->flush();
+                $entityManager->persist($pc);
+                $entityManager->persist($ps);
+                $entityManager->flush();
             }
         }
     }

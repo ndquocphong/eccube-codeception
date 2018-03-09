@@ -105,7 +105,7 @@ class EA06ContentsManagementCest
         $I->see('folder1', $FileManagePage->パンくず(1));
 
         $config = Fixtures::get('config');
-        $I->amOnPage('/'.$config['admin_route'].'/content/file_manager');
+        $I->amOnPage('/'.$config['eccube_admin_route'].'/content/file_manager');
         $I->see('コンテンツ管理ファイル管理', '#main .page-header');
 
         FileManagePage::go($I)
@@ -125,7 +125,7 @@ class EA06ContentsManagementCest
             ->入力_ファイル名('page1')
             ->入力_URL('page1')
             ->入力_内容('page1')
-            ->入力_PC用レイアウト('トップページ用レイアウト')
+            ->入力_PC用レイアウト('下層ページ用レイアウト')
             ->登録();
         $I->see('登録が完了しました。', PageEditPage::$登録完了メッセージ);
 
@@ -142,6 +142,8 @@ class EA06ContentsManagementCest
         $I->amOnPage('/user_data/page1');
         $config = Fixtures::get('config');
         $I->seeElement('div.ec-layoutRole__main');
+
+        $I->getScenario()->incomplete('未実装：レイアウトの更新は未実装');
 
         /* レイアウト編集 */
         LayoutManagePage::go($I)->レイアウト編集('下層ページ用レイアウト');
@@ -177,6 +179,8 @@ class EA06ContentsManagementCest
             ->入力_データ("<div id='block1'>block1</div>")
             ->登録();
         $I->see('登録が完了しました。', BlockEditPage::$登録完了メッセージ);
+
+        $I->getScenario()->incomplete('未実装：レイアウトの更新は未実装');
 
         // TOPページにブロックを配置
         LayoutManagePage::go($I)->レイアウト編集('トップページ用レイアウト');

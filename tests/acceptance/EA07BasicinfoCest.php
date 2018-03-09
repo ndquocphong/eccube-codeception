@@ -37,7 +37,7 @@ class EA07BasicinfoCest
             ->入力_会社名('会社名')
             ->登録();
 
-        $I->see('基本情報を保存しました。', ShopSettingPage::$登録完了メッセージ);
+        $I->see('登録が完了しました。', ShopSettingPage::$登録完了メッセージ);
     }
 
     public function basicinfo_支払方法一覧(\AcceptanceTester $I)
@@ -211,15 +211,16 @@ class EA07BasicinfoCest
 
         // 編集
         $TaxManagePage
-            ->一覧_編集(2)
+            ->一覧_編集(1)
             ->入力_消費税率(12)
             ->共通税率設定_登録();
 
         $I->see('税率設定情報を保存しました。', TaxManagePage::$登録完了メッセージ);
-        $I->see('12%', $TaxManagePage->一覧_税率(2));
+        $I->see('12%', $TaxManagePage->一覧_税率(1));
 
         // 削除
-        $TaxManagePage->一覧_削除(2);
+        $TaxManagePage->一覧_削除(1);
+        $I->see('税率設定情報を削除しました。', TaxManagePage::$登録完了メッセージ);
 
         // 個別税率設定
         $TaxManagePage
